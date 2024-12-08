@@ -1,14 +1,12 @@
 import Phaser from 'phaser';
-import WalletScene from './scenes/WalletScene';
-import ShipSelectScene from './scenes/ShipSelectScene';
 import MainScene from './scenes/MainScene';
-import PreloadScene from './scenes/PreloadScene';
 
 const config: Phaser.Types.Core.GameConfig = {
     type: Phaser.AUTO,
     parent: 'game-container',
     width: window.innerWidth,
     height: window.innerHeight,
+    backgroundColor: '#90EE90',
     physics: {
         default: 'arcade',
         arcade: {
@@ -16,11 +14,28 @@ const config: Phaser.Types.Core.GameConfig = {
             debug: false
         }
     },
-    backgroundColor: '#000000',
-    scene: [PreloadScene, WalletScene, ShipSelectScene, MainScene],
     scale: {
         mode: Phaser.Scale.RESIZE,
-        autoCenter: Phaser.Scale.CENTER_BOTH
+        autoCenter: Phaser.Scale.CENTER_BOTH,
+        width: '100%',
+        height: '100%',
+        min: {
+            width: 800,
+            height: 600
+        },
+        max: {
+            width: 1920,
+            height: 1080
+        }
+    },
+    scene: MainScene,
+    audio: {
+        disableWebAudio: true
+    },
+    render: {
+        pixelArt: true,
+        antialias: false,
+        roundPixels: true
     }
 };
 

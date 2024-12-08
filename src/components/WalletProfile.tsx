@@ -1,23 +1,73 @@
 import React, { useState, useEffect } from 'react';
 import '../styles/WalletProfile.css';
+import { COLORS, AVATAR_CONFIG, NETWORK } from '../const';
+
+const generatePixelAvatar = (address: string) => {
+    const canvas = document.createElement('canvas');
+    const size = AVATAR_CONFIG.SIZE;
+    const scale = AVATAR_CONFIG.SCALE;
+    canvas.width = size * scale;
+    canvas.height = size * scale;
+    const ctx = canvas.getContext('2d');
+    
+    if (!ctx) return '';
+
+    // Use address as seed for randomization
+    let seedValue = address.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const random = (max: number) => {
+        seedValue = (seedValue * 9301 + 49297) % 233280;
+        return Math.floor((seedValue / 233280) * max);
+    };
+
+    // Generate pixel pattern
+    const pattern = Array(size).fill(0).map(() => Array(size).fill(false));
+    
+    // Generate random pixels for left half
+    for (let x = 0; x < size / 2; x++) {
+        for (let y = 0; y < size; y++) {
+            if (random(100) > 50) {
+                const colorIndex = random(AVATAR_CONFIG.COLORS.length);
+                pattern[x][y] = colorIndex;
+                // Mirror to right side
+                pattern[size - 1 - x][y] = colorIndex;
+            }
+        }
+    }
+
+    // Draw the pattern
+    pattern.forEach((row, x) => {
+        row.forEach((colorIndex, y) => {
+            if (colorIndex !== false) {
+                ctx.fillStyle = AVATAR_CONFIG.COLORS[colorIndex as number];
+                ctx.fillRect(x * scale, y * scale, scale, scale);
+            }
+        });
+    });
+
+    return canvas.toDataURL();
+};
 
 interface WalletProfileProps {
     address: string;
+    network: string;
     onClose: () => void;
     onLogout: () => void;
     isOpen: boolean;
 }
 
-const WalletProfile: React.FC<WalletProfileProps> = ({ address, onClose, onLogout, isOpen }) => {
+const WalletProfile: React.FC<WalletProfileProps> = ({ address, network, onClose, onLogout, isOpen }) => {
     const [balance, setBalance] = useState<{ confirmed: number; unconfirmed: number; total: number } | null>(null);
     const [sendAmount, setSendAmount] = useState('');
     const [amountType, setAmountType] = useState<'btc' | 'sats'>('sats');
     const [recipientAddress, setRecipientAddress] = useState('');
     const [isSending, setIsSending] = useState(false);
     const [error, setError] = useState('');
+    const [avatarUrl, setAvatarUrl] = useState('');
 
-    // Generate avatar from address
-    const avatarUrl = `https://avatars.dicebear.com/api/identicon/${address}.svg`;
+    useEffect(() => {
+        // Generate avatar when address changes
+        setAvatarUrl(generatePixelAvatar(address));
+    }, [address]);
 
     useEffect(() => {
         const fetchBalance = async () => {
@@ -36,22 +86,14 @@ const WalletProfile: React.FC<WalletProfileProps> = ({ address, onClose, onLogou
 
     const handleLogout = async () => {
         try {
-            // Clear all local storage
             localStorage.clear();
-            
-            // Disconnect from Unisat
             if (window.unisat) {
                 await window.unisat.disconnect();
             }
-            
-            // Call parent logout handler
             onLogout();
-            
-            // Close profile dialog
             onClose();
         } catch (err) {
             console.error('Logout error:', err);
-            // Still proceed with logout even if disconnect fails
             localStorage.clear();
             onLogout();
             onClose();
@@ -113,7 +155,12 @@ const WalletProfile: React.FC<WalletProfileProps> = ({ address, onClose, onLogou
                 <button className="close-button" onClick={onClose}>&times;</button>
                 
                 <div className="profile-header">
-                    <img src={avatarUrl} alt="Wallet Avatar" className="wallet-avatar" />
+                    <div className="avatar-container">
+                        <img src={avatarUrl} alt="Wallet Avatar" className="wallet-avatar" />
+                        <div className="network-badge-large">
+                            {network === NETWORK.MAINNET ? 'MAINNET' : 'TESTNET'}
+                        </div>
+                    </div>
                     <div className="address-display">
                         <span className="label">Address:</span>
                         <span className="address">{address}</span>
