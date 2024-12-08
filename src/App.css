@@ -1,62 +1,236 @@
+body {
+  margin: 0;
+  padding: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background-color: #000000;
+}
+
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
-}
-
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
-}
-
-
-.windowframe {
   width: 100%;
   height: 100%;
-  border: none;
-}
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+.app-container {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+  background-color: #000000;
+  display: flex;
+  flex-direction: column;
 }
 
-.card {
-  padding: 2em;
+#game-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 0;
 }
 
-.read-the-docs {
-  color: #888;
+canvas {
+  width: 100%;
+  height: 100%;
 }
 
-.app {
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 2rem;
+/* Loading Screen Styles */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.loading-content {
   text-align: center;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  color: #f7931a;
 }
 
-header {
+.loading-spinner {
+  width: 50px;
+  height: 50px;
+  border: 5px solid #f7931a;
+  border-top: 5px solid transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Game UI Elements */
+.game-ui {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 100;
+}
+
+.game-ui > * {
+  pointer-events: auto;
+}
+
+/* Wallet Connection Status */
+.wallet-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: rgba(247, 147, 26, 0.1);
+  padding: 8px 20px;
+  border-radius: 20px;
+  color: #f7931a;
+  font-family: monospace;
+  z-index: 1000;
+  border: 1px solid #f7931a;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.wallet-status:hover {
+  background: rgba(247, 147, 26, 0.2);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 10px rgba(247, 147, 26, 0.2);
+}
+
+/* Custom Button Styles */
+.game-button {
+  background: #f7931a;
+  color: white;
+  border: none;
+  padding: 15px 30px;
+  border-radius: 8px;
+  font-size: 18px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.game-button:hover {
+  transform: scale(1.05);
+  background: #e68a17;
+}
+
+/* Guest Mode Styles */
+.connection-options {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.guest-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.guest-option p {
+  color: #888;
+  margin: 0;
+}
+
+.guest-button {
+  background: transparent;
+  color: #fff;
+  border: 2px solid #f7931a;
+  padding: 12px 30px;
+  border-radius: 8px;
+  font-size: 18px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.guest-button:hover {
+  background: rgba(247, 147, 26, 0.1);
+  transform: translateY(-2px);
+}
+
+/* Network Badge Styles */
+.network-badge {
+  background: rgba(247, 147, 26, 0.2);
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.address-text {
+  font-size: 14px;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .header-content {
+    padding: 0 1rem;
+  }
+  
+  .title {
+    font-size: 1.2rem;
+  }
+  
+  .wallet-info {
+    font-size: 0.9rem;
+  }
+}
+
+/* Game Over Screen */
+.game-over {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgba(0, 0, 0, 0.9);
+  padding: 2rem;
+  border-radius: 10px;
+  text-align: center;
+  border: 2px solid #00ff00;
+}
+
+.game-over h2 {
+  color: #ff0000;
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  text-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+}
+
+.game-over .score {
+  color: #00ff00;
+  font-size: 1.5rem;
   margin-bottom: 2rem;
+}
+
+.restart-button {
+  padding: 1rem 2rem;
+  background-color: #4CAF50;
+  border: none;
+  border-radius: 4px;
+  color: white;
+  cursor: pointer;
+  font-size: 1.2rem;
+  transition: all 0.3s;
+}
+
+.restart-button:hover {
+  background-color: #45a049;
+  transform: scale(1.05);
 }
 
 .wallet-connect {
@@ -371,4 +545,35 @@ footer {
   margin-top: 2rem;
   color: #6c757d;
   font-size: 0.9rem;
+}
+
+.wallet-screen {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
+  padding: 20px;
+}
+
+.game-title {
+  color: #f7931a;
+  font-size: 48px;
+  margin-bottom: 40px;
+  text-shadow: 0 0 10px rgba(247, 147, 26, 0.5);
+  text-align: center;
+}
+
+.loading-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
 }

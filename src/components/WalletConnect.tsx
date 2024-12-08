@@ -1,92 +1,141 @@
-import React from 'react';
-import { useUnisat, BitcoinNetwork, getNetworkType } from '../hooks/useUnisat';
-import { ChainType } from '../const';
+import React, { useState, useEffect } from 'react';
+import '../styles/WalletConnect.css';
 
-const WalletConnect: React.FC = () => {
-  const { wallet, isLoading, error, connectWallet, disconnectWallet } = useUnisat();
+interface WalletConnectProps {
+    onWalletConnected: (address: string, network: string) => void;
+}
 
-  const formatBalance = (sats: number): string => {
-    return sats.toLocaleString();
-  };
+const WalletConnect: React.FC<WalletConnectProps> = ({ onWalletConnected }) => {
+    const [isConnecting, setIsConnecting] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [address, setAddress] = useState<string | null>(null);
+    const [network, setNetwork] = useState<string | null>(null);
 
-  const getNetworkDisplay = (network: string, chainType: ChainType | null): string => {
-    if (chainType === ChainType.FRACTAL_BITCOIN_MAINNET) {
-      return 'Fractal Mainnet';
-    }
-    if (chainType === ChainType.FRACTAL_BITCOIN_TESTNET) {
-      return 'Fractal Testnet';
-    }
-    
-    switch (network) {
-      case 'mainnet':
-        return 'Bitcoin Mainnet';
-      case 'testnet':
-        return 'Bitcoin Testnet';
-      default:
-        return 'Unknown Network';
-    }
-  };
+    const checkWalletInstalled = () => {
+        return typeof window.unisat !== 'undefined';
+    };
 
-  const getNetworkBadgeColor = (network: string, chainType: ChainType | null): string => {
-    if (chainType === ChainType.FRACTAL_BITCOIN_MAINNET) {
-      return '#4CAF50';
-    }
-    if (chainType === ChainType.FRACTAL_BITCOIN_TESTNET) {
-      return '#FF9800';
-    }
-    
-    switch (network) {
-      case 'mainnet':
-        return '#2196F3';
-      case 'testnet':
-        return '#FF5722';
-      default:
-        return '#9E9E9E';
-    }
-  };
+    const clearWalletState = () => {
+        setAddress(null);
+        setNetwork(null);
+        localStorage.removeItem('walletConnected');
+        localStorage.removeItem('walletAddress');
+        localStorage.removeItem('walletNetwork');
+    };
 
-  return (
-    <div className="wallet-connect">
-      {!wallet.connected ? (
-        <button 
-          onClick={connectWallet}
-          disabled={isLoading}
-          className="connect-button"
-        >
-          {isLoading ? 'Connecting...' : 'Connect Unisat Wallet'}
-        </button>
-      ) : (
-        <div className="wallet-info">
-          <div 
-            className="network-badge"
-            style={{ backgroundColor: getNetworkBadgeColor(wallet.network, wallet.chainType) }}
-          >
-            {getNetworkDisplay(wallet.network, wallet.chainType)}
-          </div>
-          <h3>Wallet Connected</h3>
-          <div className="address-container">
-            <p className="label">Address:</p>
-            <p className="value">{wallet.accounts[0]}</p>
-          </div>
-          <div className="balance-container">
-            <div className="balance-item">
-              <p className="label">Total Balance:</p>
-              <p className="value highlight">{formatBalance(wallet.balance.total)} sats</p>
-            </div>
-            <div className="balance-item">
-              <p className="label">Confirmed:</p>
-              <p className="value">{formatBalance(wallet.balance.confirmed)} sats</p>
-            </div>
-            <div className="balance-item">
-              <p className="label">Unconfirmed:</p>
-              <p className="value">{formatBalance(wallet.balance.unconfirmed)} sats</p>
-            </div>
-          </div>
+    const connectWallet = async () => {
+        setIsConnecting(true);
+        setError(null);
+
+        try {
+            if (!checkWalletInstalled()) {
+                throw new Error('Please install Unisat Wallet first!');
+            }
+
+            // Force disconnect first to ensure fresh connection
+            try {
+                await window.unisat.disconnect();
+                localStorage.clear(); // Clear all stored wallet data
+            } catch (e) {
+                console.log('No previous connection to disconnect');
+            }
+
+            // Request new connection
+            const accounts = await window.unisat.requestAccounts();
+            
+            if (accounts && accounts.length > 0) {
+                const addr = accounts[0];
+                
+                // Sign message to verify ownership
+                const message = `Sign to connect to Bitcoin Space Shooter\nTimestamp: ${Date.now()}`;
+                const signature = await window.unisat.signMessage(message);
+                
+                if (signature) {
+                    const net = await window.unisat.getNetwork();
+                    setAddress(addr);
+                    setNetwork(net);
+                    localStorage.setItem('walletConnected', 'true');
+                    localStorage.setItem('walletAddress', addr);
+                    localStorage.setItem('walletNetwork', net);
+                    onWalletConnected(addr, net);
+                }
+            }
+        } catch (err) {
+            console.error('Wallet connection error:', err);
+            clearWalletState();
+            setError(err instanceof Error ? err.message : 'Failed to connect wallet');
+            localStorage.clear(); // Clear all stored data on error
+            if (err instanceof Error && err.message.includes('install')) {
+                window.open('https://unisat.io/download', '_blank');
+            }
+        } finally {
+            setIsConnecting(false);
+        }
+    };
+
+    // Check for existing connection on component mount
+    useEffect(() => {
+        const checkExistingConnection = async () => {
+            const wasConnected = localStorage.getItem('walletConnected') === 'true';
+            const savedAddress = localStorage.getItem('walletAddress');
+            const savedNetwork = localStorage.getItem('walletNetwork');
+
+            if (wasConnected && savedAddress && savedNetwork && checkWalletInstalled()) {
+                try {
+                    const accounts = await window.unisat.getAccounts();
+                    if (accounts && accounts.length > 0 && accounts[0] === savedAddress) {
+                        setAddress(savedAddress);
+                        setNetwork(savedNetwork);
+                        onWalletConnected(savedAddress, savedNetwork);
+                    } else {
+                        clearWalletState();
+                    }
+                } catch (err) {
+                    console.error('Error checking existing connection:', err);
+                    clearWalletState();
+                }
+            }
+        };
+
+        checkExistingConnection();
+    }, [onWalletConnected]);
+
+    return (
+        <div className="wallet-connect-container">
+            {error && (
+                <div className="error-message">
+                    {error}
+                    {error.includes('install') && (
+                        <button 
+                            className="install-button"
+                            onClick={() => window.open('https://unisat.io/download', '_blank')}
+                        >
+                            Install Unisat Wallet
+                        </button>
+                    )}
+                </div>
+            )}
+            
+            {!address ? (
+                <button 
+                    className={`connect-button ${isConnecting ? 'connecting' : ''}`}
+                    onClick={connectWallet}
+                    disabled={isConnecting}
+                >
+                    {isConnecting ? 'Connecting...' : 'Connect Unisat Wallet'}
+                </button>
+            ) : (
+                <div className="wallet-info">
+                    <span className="address">
+                        Connected: {address.slice(0, 6)}...{address.slice(-4)}
+                    </span>
+                    <span className="network">
+                        Network: {network}
+                    </span>
+                </div>
+            )}
         </div>
-      )}
-      {error && <p className="error">{error}</p>}
-    </div>
-  );
+    );
 };
 
 export default WalletConnect;
