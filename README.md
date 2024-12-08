@@ -46,6 +46,8 @@ BTCOrdinals Farms is a pioneering DeFi protocol that brings yield farming to Bit
 - Bitcoin Script
 - Ordinals Recursive Inscriptions
 - Multi-signature Schemes
+- [scrypt-contrcats](https://github.com/satyasai69/BitFarm-contracts)
+- https://github.com/satyasai69/BitFarm-contracts
 
 ## Protocol Architecture
 
