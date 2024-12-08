@@ -1,13 +1,13 @@
 import Phaser from 'phaser';
 
 interface Shop {
-    gameObject: Phaser.GameObjects.Rectangle;
+    gameObject: Phaser.GameObjects.Sprite;
     type: 'merchant' | 'land_shop' | 'item_shop' | 'exchange';
     name: string;
 }
 
 interface Land {
-    gameObject: Phaser.GameObjects.Rectangle;
+    gameObject: Phaser.GameObjects.Sprite;
     owner: string;
     growthStage: number;
     lastUpdate: number;
@@ -21,10 +21,16 @@ interface DialogOption {
 }
 
 export default class MainScene extends Phaser.Scene {
-    private player!: Phaser.GameObjects.Rectangle;
+    private player!: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
     private shops: Shop[] = [];
     private lands: Map<string, Land> = new Map();
     private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
+    private wasdKeys!: {
+        W: Phaser.Input.Keyboard.Key;
+        A: Phaser.Input.Keyboard.Key;
+        S: Phaser.Input.Keyboard.Key;
+        D: Phaser.Input.Keyboard.Key;
+    };
     private coins: number = 0;
     private coinsText!: Phaser.GameObjects.Text;
     private dialogBox!: Phaser.GameObjects.Container;
@@ -32,91 +38,163 @@ export default class MainScene extends Phaser.Scene {
     private placementMode: boolean = false;
     private timer!: Phaser.GameObjects.Text;
     private gameTime: number = 0;
-    private worldSize = { width: 2000, height: 2000 };
+    private worldSize = { width: 3000, height: 3000 };
+    private decorations: Phaser.GameObjects.Sprite[] = [];
 
     constructor() {
         super({ key: 'MainScene' });
     }
 
-    create() {
-        // Create grass background
-        this.createBackground();
-        
-        // Setup world bounds
-        this.physics.world.setBounds(-this.worldSize.width/2, -this.worldSize.height/2, 
-                                    this.worldSize.width, this.worldSize.height);
-        
-        // Create shops in four corners
-        this.createShops();
-        
-        // Create player
-        this.player = this.add.rectangle(0, 0, 32, 32, 0xFF69B4);
-        this.physics.add.existing(this.player);
-        (this.player.body as Phaser.Physics.Arcade.Body).setCollideWorldBounds(true);
-        
-        // Setup camera
-        this.cameras.main.setBounds(-this.worldSize.width/2, -this.worldSize.height/2, 
-                                   this.worldSize.width, this.worldSize.height);
-        this.cameras.main.startFollow(this.player);
-        
-        // Setup UI
-        this.createUI();
-        
-        // Setup controls
-        this.cursors = this.input.keyboard.createCursorKeys();
-        this.input.keyboard.on('keydown-ESC', () => this.cancelPlacement());
-        
-        // Start game timer
-        this.time.addEvent({
-            delay: 1000,
-            callback: this.updateTimer,
-            callbackScope: this,
-            loop: true
-        });
+    preload() {
+        // Load terrain assets
+        this.load.image('grass', '/assets/tiles/grass.png');
+        this.load.image('grass1', '/assets/Ground tileset/Bright-grass-tileset.png');
+        this.load.image('grass2', '/assets/Ground tileset/Dark-grass-tileset.png');
+        this.load.image('dirt', '/assets/Ground tileset/Earth-tileset.png');
+        this.load.image('path-h', '/assets/Ground tileset/Stone-path-tileset-horizontal.png');
+        this.load.image('path-v', '/assets/Ground tileset/Stone-path-tileset-vertical.png');
 
-        // Start growth cycle
-        this.time.addEvent({
-            delay: 5000,
-            callback: this.updateGrowth,
-            callbackScope: this,
-            loop: true
-        });
+        // Load nature assets
+        this.load.image('tree1', '/assets/Trees/Tree-1.png');
+        this.load.image('tree2', '/assets/Trees/Tree-2.png');
+        this.load.image('tree3', '/assets/Trees/Tree-3.png');
+
+        // Load bushes
+        this.load.image('bush1', '/assets/Bushes/Bush-1.png');
+        this.load.image('bush2', '/assets/Bushes/Bush-2.png');
+        this.load.image('bush3', '/assets/Bushes/Bush-3.png');
+
+        // Load flowers
+        this.load.image('flower1', '/assets/Flowers/Flower-1.png');
+        this.load.image('flower2', '/assets/Flowers/Flower-2.png');
+        this.load.image('flower3', '/assets/Flowers/Flower-3.png');
+
+        // Load fences
+        this.load.image('fence-h', '/assets/Fences/Wooden-fence-1.png');
+        this.load.image('fence-v', '/assets/Fences/Wooden-fence-2.png');
+        this.load.image('fence-corner', '/assets/Fences/Wooden-fence-3.png');
+        this.load.image('fence-gate', '/assets/Fences/Wooden-gate.png');
+
+        // Load objects
+        this.load.image('bench', '/assets/Bench and chest/Wooden-bench.png');
+        this.load.image('chest', '/assets/Bench and chest/Wooden-chest.png');
+
+        // Load character assets
+        this.load.spritesheet('character', '/assets/Sunnyside_World_Assets/characters/base_character.png', 
+            { frameWidth: 48, frameHeight: 48 });
+        
+        // Load farming assets
+        this.load.spritesheet('crops', 'assets/Sunnyside_World_Assets/farming/crops.png',
+            { frameWidth: 32, frameHeight: 32 });
+        
+        // Load tiles
+        this.load.image('tiles', 'assets/Sunnyside_World_Assets/tilesets/farming_tiles.png');
+
+        // Load UI elements
+        this.load.image('button', '/assets/Objects/button.png');
+        this.load.image('panel', '/assets/Objects/panel.png');
     }
 
-    private createBackground() {
-        const tileSize = 64;
-        for (let x = -this.worldSize.width/2; x < this.worldSize.width/2; x += tileSize) {
-            for (let y = -this.worldSize.height/2; y < this.worldSize.height/2; y += tileSize) {
-                this.add.rectangle(x, y, tileSize, tileSize, 0x90EE90);
-            }
+    create() {
+        // Create the world
+        const grass = this.add.tileSprite(0, 0, this.cameras.main.width, this.cameras.main.height, 'grass');
+        grass.setOrigin(0, 0);
+        grass.setScrollFactor(0);
+
+        // Setup controls
+        this.cursors = this.input.keyboard.createCursorKeys();
+        this.wasdKeys = this.input.keyboard.addKeys('W,A,S,D') as any;
+
+        // Create player
+        this.player = this.physics.add.sprite(400, 300, 'character');
+        this.player.setCollideWorldBounds(true);
+        
+        // Create player animations
+        this.anims.create({
+            key: 'idle',
+            frames: this.anims.generateFrameNumbers('character', { start: 0, end: 0 }),
+            frameRate: 10,
+            repeat: -1
+        });
+
+        this.anims.create({
+            key: 'walk',
+            frames: this.anims.generateFrameNumbers('character', { start: 0, end: 3 }),
+            frameRate: 10,
+            repeat: -1
+        });
+
+        // Set up camera to follow player
+        this.cameras.main.startFollow(this.player);
+        this.cameras.main.setZoom(1);
+
+        // Create environment
+        this.createEnvironment();
+        
+        // Create buildings
+        this.createBuildings();
+        
+        // Create UI
+        this.createUI();
+        
+        // Start game timer
+        this.startGameTimer();
+    }
+
+    private createEnvironment() {
+        // Add trees in a more organized pattern
+        const treePositions = [
+            { x: -150, y: -150 }, { x: 150, y: -150 },
+            { x: -150, y: 150 }, { x: 150, y: 150 }
+        ];
+
+        treePositions.forEach(pos => {
+            const treeType = Phaser.Math.Between(1, 3);
+            const tree = this.add.image(pos.x, pos.y, `tree${treeType}`);
+            tree.setScale(1);
+        });
+
+        // Add bushes and flowers along the paths
+        for (let x = -180; x <= 180; x += 60) {
+            const type = Math.random() > 0.5 ? 'bush' : 'flower';
+            const variant = Phaser.Math.Between(1, 3);
+            const decoration = this.add.image(x, 50, `${type}${variant}`);
+            decoration.setScale(0.8);
         }
     }
 
-    private createShops() {
-        const offset = 400;
-        const shops = [
-            { x: -offset, y: -offset, type: 'merchant', name: 'Merchant Shop' },
-            { x: offset, y: -offset, type: 'land_shop', name: 'Land Shop' },
-            { x: -offset, y: offset, type: 'item_shop', name: 'Item Shop' },
-            { x: offset, y: offset, type: 'exchange', name: 'Exchange' }
-        ];
+    private createBuildings() {
+        // Create a fenced area
+        this.createFencedArea(100, 100, 160, 120);
+        
+        // Add some benches and chests
+        this.add.image(50, 50, 'bench').setScale(1);
+        this.add.image(-50, -50, 'chest').setScale(1);
+    }
 
-        shops.forEach(shop => {
-            const shopObj = this.add.rectangle(shop.x, shop.y, 128, 128, 0x8B4513);
-            shopObj.setInteractive();
-            shopObj.on('pointerdown', () => this.handleShopInteraction(shop.type));
-            this.shops.push({
-                gameObject: shopObj,
-                type: shop.type as any,
-                name: shop.name
-            });
-            
-            // Add shop name
-            this.add.text(shop.x, shop.y - 80, shop.name, {
-                fontSize: '16px',
-                color: '#000000'
-            }).setOrigin(0.5);
-        });
+    private createFencedArea(x: number, y: number, width: number, height: number) {
+        const fenceSize = 32; 
+        
+        // Create horizontal fences
+        for (let fx = 0; fx < width; fx += fenceSize) {
+            this.add.image(x + fx, y, 'fence-h').setScale(1);
+            this.add.image(x + fx, y + height, 'fence-h').setScale(1);
+        }
+        
+        // Create vertical fences
+        for (let fy = 0; fy < height; fy += fenceSize) {
+            this.add.image(x, y + fy, 'fence-v').setScale(1);
+            this.add.image(x + width, y + fy, 'fence-v').setScale(1);
+        }
+        
+        // Add corners
+        this.add.image(x, y, 'fence-corner').setScale(1);
+        this.add.image(x + width, y, 'fence-corner').setScale(1);
+        this.add.image(x, y + height, 'fence-corner').setScale(1);
+        this.add.image(x + width, y + height, 'fence-corner').setScale(1);
+        
+        // Add a gate
+        this.add.image(x + width/2, y, 'fence-gate').setScale(1);
     }
 
     private createUI() {
@@ -187,201 +265,57 @@ export default class MainScene extends Phaser.Scene {
         this.dialogBox.setVisible(false);
     }
 
-    private handleShopInteraction(shopType: string) {
-        const shop = this.shops.find(s => s.type === shopType);
-        if (!shop) return;
-
-        const distance = Phaser.Math.Distance.Between(
-            this.player.x,
-            this.player.y,
-            shop.gameObject.x,
-            shop.gameObject.y
-        );
-
-        if (distance > 150) return;
-
-        switch(shopType) {
-            case 'land_shop':
-                this.showDialog('Land Shop', [
-                    { text: 'Buy Land (100 coins)', callback: () => this.buyLand() },
-                    { text: 'Cancel', callback: () => this.hideDialog() }
-                ]);
-                break;
-            case 'merchant':
-                this.showDialog('Merchant', [
-                    { text: 'Buy Seeds (50 coins)', callback: () => this.buySeeds() },
-                    { text: 'Sell Produce', callback: () => this.sellProduce() }
-                ]);
-                break;
-            case 'exchange':
-                this.showDialog('Exchange', [
-                    { text: 'Convert to BRC-20', callback: () => this.convertToBRC20() },
-                    { text: 'Cancel', callback: () => this.hideDialog() }
-                ]);
-                break;
-        }
-    }
-
-    private buyLand() {
-        if (this.coins < 100) {
-            this.showDialog('Error', [
-                { text: 'Not enough coins!', callback: () => this.hideDialog() }
-            ]);
-            return;
-        }
-
-        this.coins -= 100;
-        this.coinsText.setText(`Coins: ${this.coins}`);
-        this.placementMode = true;
-        this.selectedLand = {
-            gameObject: this.add.rectangle(0, 0, 64, 64, 0x8B4513),
-            owner: 'player',
-            growthStage: 0,
-            lastUpdate: Date.now(),
-            hasCollectible: false,
-            type: 'tree'
-        };
-        this.selectedLand.gameObject.setAlpha(0.5);
-    }
-
-    private buySeeds() {
-        // Implement seed buying logic
-        console.log('Buying seeds...');
-    }
-
-    private sellProduce() {
-        // Implement produce selling logic
-        console.log('Selling produce...');
-    }
-
-    private placeLand(x: number, y: number) {
-        if (!this.selectedLand) return;
-        
-        const landId = `land_${Date.now()}`;
-        this.selectedLand.gameObject.setPosition(x, y);
-        this.selectedLand.gameObject.setAlpha(1);
-        this.lands.set(landId, this.selectedLand);
-        
-        this.selectedLand.gameObject.setInteractive();
-        this.selectedLand.gameObject.on('pointerdown', () => this.handleLandInteraction(landId));
-        
-        this.placementMode = false;
-        this.selectedLand = null;
-    }
-
-    private cancelPlacement() {
-        if (this.selectedLand) {
-            this.selectedLand.gameObject.destroy();
-            this.selectedLand = null;
-            this.placementMode = false;
-            this.coins += 100; // Refund
-            this.coinsText.setText(`Coins: ${this.coins}`);
-        }
-    }
-
-    private handleLandInteraction(landId: string) {
-        const land = this.lands.get(landId);
-        if (!land) return;
-
-        if (land.hasCollectible) {
-            this.collectProduce(land);
-        }
-    }
-
-    private collectProduce(land: Land) {
-        if (!land.hasCollectible) return;
-        
-        const reward = Math.floor(Math.random() * 20) + 10;
-        this.coins += reward;
-        this.coinsText.setText(`Coins: ${this.coins}`);
-        
-        land.hasCollectible = false;
-        land.growthStage = 0;
-        land.gameObject.setFillStyle(0x8B4513);
-    }
-
-    private updateGrowth() {
-        this.lands.forEach(land => {
-            if (land.growthStage < 5 && !land.hasCollectible) {
-                land.growthStage++;
-                const green = Math.min(50 + (land.growthStage * 40), 255);
-                land.gameObject.setFillStyle(Phaser.Display.Color.GetColor(0, green, 0));
-                
-                if (land.growthStage === 5) {
-                    land.hasCollectible = true;
-                    // Add sparkle effect or indicator
-                }
-            }
+    private startGameTimer() {
+        this.time.addEvent({
+            delay: 1000,
+            callback: this.updateGameTime,
+            callbackScope: this,
+            loop: true
         });
     }
 
-    private updateTimer() {
+    private updateGameTime() {
         this.gameTime++;
         const minutes = Math.floor(this.gameTime / 60);
         const seconds = this.gameTime % 60;
         this.timer.setText(`Time: ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
     }
 
-    private convertToBRC20() {
-        if (this.coins < 1000) {
-            this.showDialog('Error', [
-                { text: 'Need 1000 coins minimum', callback: () => this.hideDialog() }
-            ]);
-            return;
-        }
-
-        // Here you would integrate with actual BRC-20 conversion
-        console.log('Converting coins to BRC-20 tokens...');
-    }
-
     update() {
-        if (!this.cursors) return;
-
-        const speed = 5;
+        if (!this.player || this.placementMode) return;
 
         // Handle movement
-        const body = this.player.body as Phaser.Physics.Arcade.Body;
-        body.setVelocity(0);
+        const speed = 160;
+        
+        // Reset velocity
+        this.player.setVelocity(0);
+        
+        // Horizontal movement
+        if (this.wasdKeys.A.isDown || this.cursors.left.isDown) {
+            this.player.setVelocityX(-speed);
+            this.player.flipX = true;
+        }
+        else if (this.wasdKeys.D.isDown || this.cursors.right.isDown) {
+            this.player.setVelocityX(speed);
+            this.player.flipX = false;
+        }
+        
+        // Vertical movement
+        if (this.wasdKeys.W.isDown || this.cursors.up.isDown) {
+            this.player.setVelocityY(-speed);
+        }
+        else if (this.wasdKeys.S.isDown || this.cursors.down.isDown) {
+            this.player.setVelocityY(speed);
+        }
+        
+        // Play animations
+        if (this.player.body.velocity.x !== 0 || this.player.body.velocity.y !== 0) {
+            this.player.anims.play('walk', true);
+        } else {
+            this.player.anims.play('idle', true);
+        }
 
-        if (this.cursors.left.isDown) {
-            body.setVelocityX(-speed * 60);
-        }
-        else if (this.cursors.right.isDown) {
-            body.setVelocityX(speed * 60);
-        }
-
-        if (this.cursors.up.isDown) {
-            body.setVelocityY(-speed * 60);
-        }
-        else if (this.cursors.down.isDown) {
-            body.setVelocityY(speed * 60);
-        }
-
-        // Update land placement preview
-        if (this.placementMode && this.selectedLand) {
-            const pointer = this.input.activePointer;
-            const worldPoint = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
-            this.selectedLand.gameObject.setPosition(worldPoint.x, worldPoint.y);
-            
-            if (pointer.isDown) {
-                this.placeLand(worldPoint.x, worldPoint.y);
-            }
-        }
-
-        // Check for shop proximity and show indicators
-        this.shops.forEach(shop => {
-            const distance = Phaser.Math.Distance.Between(
-                this.player.x,
-                this.player.y,
-                shop.gameObject.x,
-                shop.gameObject.y
-            );
-            
-            if (distance < 150) {
-                shop.gameObject.setStrokeStyle(2, 0xFFFF00);
-            } else {
-                shop.gameObject.setStrokeStyle(0);
-            }
-        });
+        // Check for shop interactions
+        this.checkShopInteractions();
     }
 }
