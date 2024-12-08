@@ -1,5 +1,5 @@
 
-# BTCOrdinals Farms
+# BTC  Farms (FBTC)
 
 
 [scrypt-contrcats](https://github.com/satyasai69/BitFarm-contracts)
