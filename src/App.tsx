@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import './App.css';
-import WalletConnect from './components/WalletConnect';
+import LandingPage from './components/LandingPage';
+import ConnectPage from './components/ConnectPage';
+import Menu from './components/Menu';
+import GameHeader from './components/GameHeader';
 import WalletProfile from './components/WalletProfile';
 import Game from './components/Game';
 
@@ -73,46 +77,58 @@ function App() {
   };
 
   return (
-    <div className="app-container">
-      {!walletConnected && !isGuest ? (
-        <div className="wallet-screen">
-          <h1 className="game-title">Bitcoin Space Shooter</h1>
-          <div className="connection-options">
-            <WalletConnect onWalletConnected={handleWalletConnected} />
-            <div className="guest-option">
-              <p>or</p>
-              <button className="guest-button" onClick={handlePlayAsGuest}>
-                Play as Guest
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : (
-        <>
-          {walletConnected && (
-            <div 
-              className="wallet-status"
-              onClick={() => setShowProfile(true)}
-            >
-              <span className="network-badge">{networkType}</span>
-              <span className="address-text">
-                {walletAddress && `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`}
-              </span>
-            </div>
-          )}
-          {showProfile && walletAddress && (
-            <WalletProfile
-              address={walletAddress}
-              network={networkType}
-              onClose={() => setShowProfile(false)}
-              onLogout={handleLogout}
-              isOpen={showProfile}
-            />
-          )}
-          <Game walletAddress={walletAddress} isGuest={isGuest} />
-        </>
-      )}
-    </div>
+    <Router>
+      <div className="app-container">
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route 
+            path="/connect" 
+            element={
+              !walletConnected ? (
+                <ConnectPage 
+                  onWalletConnected={handleWalletConnected}
+                  onPlayAsGuest={handlePlayAsGuest}
+                />
+              ) : (
+                <Menu 
+                  walletConnected={walletConnected}
+                  walletAddress={walletAddress}
+                  networkType={networkType}
+                  onLogout={handleLogout}
+                />
+              )
+            } 
+          />
+          <Route
+            path="/game"
+            element={
+              walletConnected || isGuest ? (
+                <>
+                  <GameHeader 
+                    walletConnected={walletConnected}
+                    walletAddress={walletAddress}
+                    networkType={networkType}
+                    onProfileClick={() => setShowProfile(true)}
+                  />
+                  {showProfile && walletAddress && (
+                    <WalletProfile
+                      address={walletAddress}
+                      network={networkType}
+                      onClose={() => setShowProfile(false)}
+                      onLogout={handleLogout}
+                      isOpen={showProfile}
+                    />
+                  )}
+                  <Game walletAddress={walletAddress} isGuest={isGuest} />
+                </>
+              ) : (
+                <Navigate to="/connect" replace />
+              )
+            }
+          />
+        </Routes>
+      </div>
+    </Router>
   );
 }
 

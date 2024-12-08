@@ -1,0 +1,67 @@
+.connect-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+}
+
+.connect-content {
+  max-width: 600px;
+  width: 100%;
+  text-align: center;
+  padding: 3rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 20px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.connect-title {
+  font-size: 2.5rem;
+  margin-bottom: 1.5rem;
+  color: #f7931a;
+  font-family: 'Press Start 2P', monospace;
+}
+
+.connect-description {
+  font-size: 1.1rem;
+  margin-bottom: 2rem;
+  color: #cccccc;
+}
+
+.connection-options {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.guest-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.guest-option p {
+  color: #cccccc;
+  margin: 0;
+}
+
+.guest-button {
+  background: transparent;
+  border: 2px solid #f7931a;
+  padding: 0.8rem 2rem;
+  font-size: 1rem;
+  border-radius: 30px;
+  color: #f7931a;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.guest-button:hover {
+  background: #f7931a;
+  color: white;
+}
