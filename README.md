@@ -12,21 +12,22 @@ BTCOrdinals Farms is a pioneering DeFi protocol that brings yield farming to Bit
 
 ## Key Features
 
-- 🌾 Ordinals-based Farming Protocol
-- 💰 Yield Generation through Bitcoin Inscriptions
-- 🏦 Multiple Farming Pools
-- 🔒 Non-custodial Architecture
-- ⚡ Lightning Network Integration
-- 📊 Real-time APY Tracking
+
+🌎 Virtual Land Ownership (CAT-721 NFTs)
+🌾 Farming Mechanics
+💰 Play-to-Earn Rewards (CAT-20 Tokens)
+🏪 Marketplace Integration
+👥 Multiplayer Interactions
 
 ## Technology Stack
 
 ### Blockchain
+
 - Bitcoin Network
-- Ordinals Protocol
-- Taproot Assets
-- Lightning Network
-- Recursive Inscriptions
+-Fractal Bitcoin (FBT) for recursive inscriptions
+- CAT-721 for Land NFTs
+- CAT-20 for Reward Tokens
+- Unisat Marketplace Integration
 
 ### Frontend
 - React.js
@@ -34,6 +35,12 @@ BTCOrdinals Farms is a pioneering DeFi protocol that brings yield farming to Bit
 - Tailwind CSS
 - Bitcoin.js
 - Ordinals SDK
+
+### Game Development
+- Phaser.js 3 for game engine
+- Tiled Map Editor for level design
+- Texture Packer for sprite management
+- WebGL renderer
 
 ### Backend
 - Node.js
@@ -51,28 +58,59 @@ BTCOrdinals Farms is a pioneering DeFi protocol that brings yield farming to Bit
 
 ## Protocol Architecture
 
-### Farming Pools
-- Single Asset Pools
-  - Stake ordinal inscriptions
-  - Earn yield in BTC
-- LP Token Pools
-  - Provide liquidity
-  - Enhanced APY rewards
-- Dynamic reward calculation
-- Auto-compounding options
 
-### Security Features
-- Multi-signature requirements
-- Timelock mechanisms
-- Emergency withdrawal system
-- Rate limiting
-- Automated security checks
+## Farming Mechanics
 
-### Inscription Standards
-- Ordinal inscription format
-- Recursive inscription patterns
-- Collection verification
-- Metadata standards
+### Land System
+
+- Each land NFT (CAT-721) has unique properties:
+  - Soil Quality (affects crop growth speed)
+  - Water Access (determines irrigation needs)
+  - Climate Zone (influences suitable crops)
+  - Size (determines planting capacity)
+
+### Crop Management
+
+1. Planting
+
+   - Different seed types for various crops
+   - Seasonal planting restrictions
+   - Soil preparation requirements
+
+2. Growing
+
+   - Growth stages (seedling, mature, harvest-ready)
+   - Weather effects on growth
+   - Disease and pest management
+   - Watering and fertilizing mechanics
+
+3. Harvesting
+   - Optimal harvest timing
+   - Crop quality factors
+   - Harvest tool requirements
+   - Yield calculations
+
+### Resource Management
+
+- Tools and Equipment
+
+  - Basic tools (hoe, watering can, etc.)
+  - Advanced machinery (tractors, harvesters)
+  - Tool durability and maintenance
+
+- Resources
+  - Seeds
+  - Water
+  - Fertilizers
+  - Energy points
+
+### Reward System
+
+- Daily farming tasks rewards
+- Harvest quality bonuses
+- Special event multipliers
+- Community farming benefits
+
 
 ## Getting Started
 
