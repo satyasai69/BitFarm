@@ -1,52 +1,130 @@
-# React + TypeScript + Vite
 
-[contrcats](https://github.com/satyasai69/BitFarm-contracts)
+# BTCOrdinals Farms
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-Currently, two official plugins are available:
+[scrypt-contrcats](https://github.com/satyasai69/BitFarm-contracts)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+A decentralized farming protocol built on Bitcoin Ordinals, enabling users to farm and earn yields through Bitcoin inscriptions.
 
-## Expanding the ESLint configuration
+## Overview
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+BTCOrdinals Farms is a pioneering DeFi protocol that brings yield farming to Bitcoin through Ordinals technology. The protocol allows users to stake their inscriptions, participate in farming pools, and earn rewards in a completely decentralized manner on Bitcoin.
 
-- Configure the top-level `parserOptions` property like this:
+## Key Features
 
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+- 🌾 Ordinals-based Farming Protocol
+- 💰 Yield Generation through Bitcoin Inscriptions
+- 🏦 Multiple Farming Pools
+- 🔒 Non-custodial Architecture
+- ⚡ Lightning Network Integration
+- 📊 Real-time APY Tracking
+
+## Technology Stack
+
+### Blockchain
+- Bitcoin Network
+- Ordinals Protocol
+- Taproot Assets
+- Lightning Network
+- Recursive Inscriptions
+
+### Frontend
+- React.js
+- TypeScript
+- Tailwind CSS
+- Bitcoin.js
+- Ordinals SDK
+
+### Backend
+- Node.js
+- Express.js
+- MongoDB
+- Redis for caching
+- WebSocket for real-time updates
+
+### Smart Contracts
+- Bitcoin Script
+- Ordinals Recursive Inscriptions
+- Multi-signature Schemes
+
+## Protocol Architecture
+
+### Farming Pools
+- Single Asset Pools
+  - Stake ordinal inscriptions
+  - Earn yield in BTC
+- LP Token Pools
+  - Provide liquidity
+  - Enhanced APY rewards
+- Dynamic reward calculation
+- Auto-compounding options
+
+### Security Features
+- Multi-signature requirements
+- Timelock mechanisms
+- Emergency withdrawal system
+- Rate limiting
+- Automated security checks
+
+### Inscription Standards
+- Ordinal inscription format
+- Recursive inscription patterns
+- Collection verification
+- Metadata standards
+
+## Getting Started
+
+### Prerequisites
+```bash
+# Install Node.js (v18 or higher)
+# Install MongoDB
+# Install Redis
 ```
 
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
+### Installation
+```bash
+# Clone the repository
+git clone [repository-url]
 
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
+# Install dependencies
+npm install
 
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
+# Configure environment
+cp .env.example .env
+
+# Start development server
+npm run dev
 ```
+
+## Smart Contract System
+
+### Farming Contract
+```typescript
+// Core functionalities
+- stakeInscription(): Stake ordinal inscriptions
+- unstakeInscription(): Withdraw staked inscriptions
+- claimRewards(): Harvest earned yields
+- checkRewards(): View pending rewards
+
+// Pool Management
+- createPool(): Initialize new farming pool
+- updatePool(): Modify pool parameters
+- calculateAPY(): Compute current yields
+```
+
+### Project Structure
+```
+src/
+├── contracts/     # Bitcoin Script contracts
+├── pools/         # Farming pool implementations
+├── utils/         # Helper utilities
+└── interfaces/    # TypeScript interfaces
+```
+
+## Contributing
+
+Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
